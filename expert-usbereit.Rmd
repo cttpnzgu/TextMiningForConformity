@@ -1,0 +1,66 @@
+---
+title: "expert-usereit"
+author: "gorbunov"
+date: "14 04 2020"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(INBOtheme)
+library(knitr)
+library(corrplot)
+library(GGally)
+library(readxl)
+library(stringr)
+library(plotly)
+rm(list = ls())
+```
+
+```{r fig.height=6, fig.width=12, message=FALSE, warning=FALSE}
+df <- read_excel("data/expert.xlsx", sheet = "Лист1")
+colnames(df)[1:2] <- c("expert", "sample")
+df$expert <- paste0("expert_", df$expert)
+
+df %>% gather(key = item, value = value, а:л) -> df.long
+
+df.long %>% spread(key = expert, value = value, fill=0) -> df.short
+
+res1 <- cor.mtest(df.short %>% select(expert_1:expert_3), conf.level = .95, method = "pearson")
+corrplot(cor(df.short %>% select(expert_1:expert_3)), p.mat = res1$p, sig.level = .05)
+```
+
+```{r fig.height=6, fig.width=12, message=FALSE, warning=FALSE}
+res1 <- cor.mtest(df.short %>% select(expert_1:expert_3), conf.level = .95, method = "spearman")
+corrplot(cor(df.short %>% select(expert_1:expert_3)), p.mat = res1$p, sig.level = .05)
+```
+
+```{r fig.height=6, fig.width=12, message=FALSE, warning=FALSE}
+res1 <- cor.mtest(df.short %>% select(expert_1:expert_3), conf.level = .95, method = "kendall")
+corrplot(cor(df.short %>% select(expert_1:expert_3)), p.mat = res1$p, sig.level = .05)
+```
+
+```{r fig.height=6, fig.width=12, message=FALSE, warning=FALSE}
+g <- df.long %>% ggplot(aes(x = item, y = value))+geom_point()+facet_grid(expert~sample)+theme_elsevier(base_size = 12, base_family = "")
+ggplotly(g)
+
+g <- df.long %>% ggplot(aes(x = item, y = value, color = sample))+geom_point()
+ggplotly(g)
+
+g <- df.long %>% ggplot(aes(x = item, y = value, color = sample))+geom_boxplot()
+ggplotly(g)
+
+g <- ggscatmat(df.short, columns = 3:5, color="sample", alpha=0.8)+theme_elsevier(base_size = 12, base_family = "")
+ggplotly(g)
+
+g <- ggscatmat(df.short, columns = 3:5, color="item", alpha=0.8)+theme_elsevier(base_size = 12, base_family = "")
+ggplotly(g)
+```
